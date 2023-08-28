@@ -25,7 +25,7 @@ class TransitionToImage extends StatefulWidget {
     required this.image,
     this.width,
     this.height,
-    this.borderRadius,
+    this.borderRadius = BorderRadius.zero,
     this.color,
     this.blendMode,
     this.fit = BoxFit.contain,
@@ -77,7 +77,7 @@ class TransitionToImage extends StatefulWidget {
   /// exceed width/height.
   ///
   /// This value is ignored if [clipper] is non-null.
-  final BorderRadius? borderRadius;
+  final BorderRadius borderRadius;
 
   /// If non-null, this color is blended with each image pixel using [colorBlendMode].
   final Color? color;
@@ -218,18 +218,17 @@ enum _TransitionStatus {
   completed,
   failed,
 }
+
 enum TransitionType {
   slide,
   fade,
 }
 
-class _TransitionToImageState extends State<TransitionToImage>
-    with SingleTickerProviderStateMixin {
+class _TransitionToImageState extends State<TransitionToImage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation _animation;
   Tween<double> _fadeTween = Tween(begin: 0.0, end: 1.0);
-  Tween<Offset> _slideTween =
-      Tween(begin: const Offset(0.0, -1.0), end: Offset.zero);
+  Tween<Offset> _slideTween = Tween(begin: const Offset(0.0, -1.0), end: Offset.zero);
 
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
@@ -247,8 +246,8 @@ class _TransitionToImageState extends State<TransitionToImage>
     if (widget.transitionType == TransitionType.fade) {
       _fadeTween = widget.tween as Tween<double>? ?? Tween(begin: 0.0, end: 1.0);
     } else if (widget.transitionType == TransitionType.slide) {
-      _slideTween = widget.tween as Tween<Offset>? ??
-          Tween(begin: const Offset(0.0, -1.0), end: Offset.zero);
+      _slideTween =
+          widget.tween as Tween<Offset>? ?? Tween(begin: const Offset(0.0, -1.0), end: Offset.zero);
     }
     _animation = CurvedAnimation(parent: _controller, curve: widget.curve);
     super.initState();
@@ -263,8 +262,7 @@ class _TransitionToImageState extends State<TransitionToImage>
   @override
   void didUpdateWidget(TransitionToImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((widget.image != oldWidget.image) || widget.forceRebuildWidget)
-      _getImage();
+    if ((widget.image != oldWidget.image) || widget.forceRebuildWidget) _getImage();
   }
 
   @override
@@ -275,8 +273,7 @@ class _TransitionToImageState extends State<TransitionToImage>
 
   @override
   void dispose() {
-    _imageStream!.removeListener(
-        ImageStreamListener(_updateImage, onError: _catchBadImage));
+    _imageStream!.removeListener(ImageStreamListener(_updateImage, onError: _catchBadImage));
     _controller.dispose();
     super.dispose();
   }
@@ -310,35 +307,31 @@ class _TransitionToImageState extends State<TransitionToImage>
     });
   }
 
-  Future<void> _getImage({bool reload: false}) async {
+  Future<void> _getImage({bool reload = false}) async {
     if (reload) {
       if (widget.printError) print('Reloading image.');
 
       _imageProvider.evict();
-      if (widget.longPressForceRefresh &&
-          _imageProvider is AdvancedNetworkImage) {
+      if (widget.longPressForceRefresh && _imageProvider is AdvancedNetworkImage) {
         await removeFromCache(
           uid((_imageProvider as AdvancedNetworkImage).url),
-          useCacheRule:
-              (_imageProvider as AdvancedNetworkImage).cacheRule != null,
+          useCacheRule: (_imageProvider as AdvancedNetworkImage).cacheRule != null,
         );
       }
     }
 
     final ImageStream? oldImageStream = _imageStream;
-    if (_imageProvider is AdvancedNetworkImage &&
-        widget.loadingWidgetBuilder != null) {
+    if (_imageProvider is AdvancedNetworkImage && widget.loadingWidgetBuilder != null) {
       var callback = (_imageProvider as AdvancedNetworkImage).loadingProgress;
-      (_imageProvider as AdvancedNetworkImage).loadingProgress =
-          (double progress, Uint8List data) {
+      (_imageProvider as AdvancedNetworkImage).loadingProgress = (double progress, Uint8List data) {
         if (mounted) {
           setState(() {
             _progress = progress;
             if (progress > 0.1) _imageData = data;
           });
         } else {
-          return oldImageStream?.removeListener(
-              ImageStreamListener(_updateImage, onError: _catchBadImage));
+          return oldImageStream
+              ?.removeListener(ImageStreamListener(_updateImage, onError: _catchBadImage));
         }
 
         if (callback != null) callback(progress, data);
@@ -351,9 +344,7 @@ class _TransitionToImageState extends State<TransitionToImage>
           ? Size(widget.width!, widget.height!)
           : null,
     ));
-    if (_imageInfo != null &&
-        !reload &&
-        (_imageStream!.key == oldImageStream?.key)) {
+    if (_imageInfo != null && !reload && (_imageStream!.key == oldImageStream?.key)) {
       if (widget.forceRebuildWidget) {
         if (widget.loadedCallback != null)
           widget.loadedCallback!();
@@ -362,8 +353,7 @@ class _TransitionToImageState extends State<TransitionToImage>
       setState(() => _status = _TransitionStatus.completed);
     } else {
       setState(() => _status = _TransitionStatus.start);
-      oldImageStream?.removeListener(
-          ImageStreamListener(_updateImage, onError: _catchBadImage));
+      oldImageStream?.removeListener(ImageStreamListener(_updateImage, onError: _catchBadImage));
 
       _imageStream!.addListener(
         ImageStreamListener(_updateImage, onError: _catchBadImage),
@@ -387,8 +377,7 @@ class _TransitionToImageState extends State<TransitionToImage>
     _resolveStatus();
 
     if (widget.loadFailedCallback != null) widget.loadFailedCallback!();
-    if (widget.disableMemoryCache || widget.disableMemoryCacheIfFailed)
-      _imageProvider.evict();
+    if (widget.disableMemoryCache || widget.disableMemoryCacheIfFailed) _imageProvider.evict();
   }
 
   @override
@@ -402,8 +391,7 @@ class _TransitionToImageState extends State<TransitionToImage>
                     child: widget.placeholder,
                   )
                 : widget.placeholder
-        : _status == _TransitionStatus.start ||
-                _status == _TransitionStatus.loading
+        : _status == _TransitionStatus.start || _status == _TransitionStatus.loading
             ? widget.loadingWidgetBuilder != null
                 ? widget.loadingWidgetBuilder!(context, _progress, _imageData)
                 : widget.loadingWidget

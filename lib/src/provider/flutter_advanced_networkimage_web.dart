@@ -1,9 +1,7 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
 import 'package:flutter_advanced_networkimage_2/src/disk_cache.dart';
 import 'package:flutter_advanced_networkimage_2/src/utils.dart';
 
@@ -129,7 +127,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   }
 
   @override
-  ImageStreamCompleter load(AdvancedNetworkImage key, DecoderCallback decode) {
+  ImageStreamCompleter loadImage(AdvancedNetworkImage key, ImageDecoderCallback decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(key, decode)!.then((value) => value),
       scale: key.scale,
@@ -140,8 +138,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
     );
   }
 
-  Future<ui.Codec>? _loadAsync(
-      AdvancedNetworkImage key, DecoderCallback decode) {
+  Future<ui.Codec>? _loadAsync(AdvancedNetworkImage key, ImageDecoderCallback decode) {
     assert(key == this);
 
     final Uri resolved = Uri.base.resolve(key.url);
@@ -154,14 +151,12 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   bool operator ==(dynamic other) {
     if (other.runtimeType != runtimeType) return false;
     final AdvancedNetworkImage typedOther = other;
-    return id == null
-        ? url == typedOther.url && scale == typedOther.scale
-        : id == typedOther.id;
+    return id == null ? url == typedOther.url && scale == typedOther.scale : id == typedOther.id;
   }
 
   @override
-  int get hashCode => ui.hashValues(url, scale, useDiskCache, retryLimit,
-      retryDuration, retryDurationFactor, timeoutDuration);
+  int get hashCode => ui.hashValues(
+      url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
 
   @override
   String toString() => '$runtimeType('

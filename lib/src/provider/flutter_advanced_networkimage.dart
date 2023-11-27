@@ -1,16 +1,15 @@
-import 'dart:io';
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:io';
 import 'dart:ui' as ui show Codec, hashValues;
+import 'dart:ui';
 
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_advanced_networkimage_2/src/disk_cache.dart';
 import 'package:flutter_advanced_networkimage_2/src/utils.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 typedef Future<Uint8List?> _ImageProcessing(Uint8List data);
 
@@ -126,7 +125,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
     if (memory) {
       cache ??= imageCache;
       final key = await obtainKey(configuration);
-      return cache!.evict(key);
+      return cache.evict(key);
     }
     if (disk) {
       return removeFromCache(url);
@@ -135,7 +134,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   }
 
   @override
-  ImageStreamCompleter load(AdvancedNetworkImage key, DecoderCallback decode) {
+  ImageStreamCompleter loadImage(AdvancedNetworkImage key, ImageDecoderCallback decode) {
     final chunkEvents = StreamController<ImageChunkEvent>();
 
     return MultiFrameImageStreamCompleter(
@@ -151,7 +150,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
 
   Future<ui.Codec> _loadAsync(
     AdvancedNetworkImage key,
-    DecoderCallback decode,
+    ImageDecoderCallback decode,
     StreamController<ImageChunkEvent> chunkEvents,
   ) async {
     assert(key == this);
@@ -164,9 +163,8 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
             _diskCache = (await key.postProcessing!(_diskCache)) ?? _diskCache;
           if (key.loadedCallback != null) key.loadedCallback!();
           return decode(
-            _diskCache,
-            cacheWidth: key.width,
-            cacheHeight: key.height,
+            await ImmutableBuffer.fromUint8List(_diskCache),
+            getTargetSize: (_, __) => TargetImageSize(width: key.width, height: key.height),
           );
         }
       } catch (e) {
@@ -189,9 +187,8 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
           imageData = (await key.postProcessing!(imageData)) ?? imageData;
         if (key.loadedCallback != null) key.loadedCallback!();
         return decode(
-          imageData,
-          cacheWidth: key.width,
-          cacheHeight: key.height,
+          await ImmutableBuffer.fromUint8List(imageData),
+          getTargetSize: (_, __) => TargetImageSize(width: key.width, height: key.height),
         );
       }
     }
@@ -200,16 +197,16 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
     if (key.fallbackAssetImage != null) {
       ByteData imageData = await rootBundle.load(key.fallbackAssetImage!);
       return decode(
-        imageData.buffer.asUint8List(),
-        cacheWidth: key.width,
-        cacheHeight: key.height,
+        await ImmutableBuffer.fromUint8List(
+          imageData.buffer.asUint8List(),
+        ),
+        getTargetSize: (_, __) => TargetImageSize(width: key.width, height: key.height),
       );
     }
     if (key.fallbackImage != null)
       return decode(
-        key.fallbackImage!,
-        cacheWidth: key.width,
-        cacheHeight: key.height,
+        await ImmutableBuffer.fromUint8List(key.fallbackImage!),
+        getTargetSize: (_, __) => TargetImageSize(width: key.width, height: key.height),
       );
 
     return Future.error(StateError('Failed to load $url.'));
@@ -232,8 +229,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
       if (_cacheImagesDirectory.existsSync()) {
         File _cacheImageFile = File(join(_cacheImagesDirectory.path, uId));
         if (_cacheImageFile.existsSync()) {
-          if (key.loadedFromDiskCacheCallback != null)
-            key.loadedFromDiskCacheCallback!();
+          if (key.loadedFromDiskCacheCallback != null) key.loadedFromDiskCacheCallback!();
           return await _cacheImageFile.readAsBytes();
         }
       } else {
@@ -255,16 +251,14 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
       if (imageData != null) {
         if (key.preProcessing != null)
           imageData = (await key.preProcessing!(imageData)) ?? imageData;
-        await (File(join(_cacheImagesDirectory.path, uId)))
-            .writeAsBytes(imageData);
+        await (File(join(_cacheImagesDirectory.path, uId))).writeAsBytes(imageData);
         return imageData;
       }
     } else {
       DiskCache diskCache = DiskCache()..printError = key.printError;
       Uint8List? data = await diskCache.load(uId, rule: key.cacheRule);
       if (data != null) {
-        if (key.loadedFromDiskCacheCallback != null)
-          key.loadedFromDiskCacheCallback!();
+        if (key.loadedFromDiskCacheCallback != null) key.loadedFromDiskCacheCallback!();
         return data;
       }
 
@@ -280,8 +274,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
         printError: key.printError,
       );
       if (data != null) {
-        if (key.preProcessing != null)
-          data = (await key.preProcessing!(data)) ?? data;
+        if (key.preProcessing != null) data = (await key.preProcessing!(data)) ?? data;
         await diskCache.save(uId, data, key.cacheRule!);
         return data;
       }
@@ -294,14 +287,12 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   bool operator ==(dynamic other) {
     if (other.runtimeType != runtimeType) return false;
     final AdvancedNetworkImage typedOther = other;
-    return id == null
-        ? url == typedOther.url && scale == typedOther.scale
-        : id == typedOther.id;
+    return id == null ? url == typedOther.url && scale == typedOther.scale : id == typedOther.id;
   }
 
   @override
-  int get hashCode => ui.hashValues(url, scale, useDiskCache, retryLimit,
-      retryDuration, retryDurationFactor, timeoutDuration);
+  int get hashCode => ui.hashValues(
+      url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
 
   @override
   String toString() => '$runtimeType('

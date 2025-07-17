@@ -5,14 +5,14 @@ class ZoomableList extends StatefulWidget {
     Key? key,
     required this.child,
     this.childKey,
-    this.maxScale: 1.4,
-    this.enablePan: true,
-    this.enableZoom: true,
+    this.maxScale = 1.4,
+    this.enablePan = true,
+    this.enableZoom = true,
     this.maxWidth,
-    this.maxHeight: double.infinity,
-    this.zoomSteps: 0,
-    this.enableFling: true,
-    this.flingFactor: 1.0,
+    this.maxHeight = double.infinity,
+    this.zoomSteps = 0,
+    this.enableFling = true,
+    this.flingFactor = 1.0,
     this.onTap,
   }) : super(key: key);
 
@@ -33,8 +33,7 @@ class ZoomableList extends StatefulWidget {
   _ZoomableListState createState() => _ZoomableListState();
 }
 
-class _ZoomableListState extends State<ZoomableList>
-    with TickerProviderStateMixin {
+class _ZoomableListState extends State<ZoomableList> with TickerProviderStateMixin {
   final GlobalKey _key = GlobalKey();
 
   double _zoom = 1.0;
@@ -55,10 +54,8 @@ class _ZoomableListState extends State<ZoomableList>
 
   @override
   void initState() {
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
-    _flingController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+    _controller = AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+    _flingController = AnimationController(vsync: this, duration: Duration(milliseconds: 200));
     super.initState();
   }
 
@@ -70,14 +67,11 @@ class _ZoomableListState extends State<ZoomableList>
   }
 
   void _handleReset() {
-    _zoomAnimation = Tween<double>(begin: 1.0, end: _zoom)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut))
+    _zoomAnimation = Tween<double>(begin: 1.0, end: _zoom).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut))
       ..addListener(() => setState(() => _zoom = _zoomAnimation.value));
-    _panOffsetAnimation = Tween<Offset>(
-            begin: Offset(0.0, _panOffset.dy), end: _panOffset)
+    _panOffsetAnimation = Tween<Offset>(begin: Offset(0.0, _panOffset.dy), end: _panOffset)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut))
-      ..addListener(
-          () => setState(() => _panOffset = _panOffsetAnimation.value));
+      ..addListener(() => setState(() => _panOffset = _panOffsetAnimation.value));
     if (_zoom < 0)
       _controller.forward(from: 1.0);
     else
@@ -102,8 +96,7 @@ class _ZoomableListState extends State<ZoomableList>
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
     if (!_getContainerSize) {
-      final RenderBox box =
-          _key.currentContext!.findRenderObject() as RenderBox;
+      final RenderBox box = _key.currentContext!.findRenderObject() as RenderBox;
       if (box.size == _containerSize) {
         _getContainerSize = true;
       } else {
@@ -114,10 +107,7 @@ class _ZoomableListState extends State<ZoomableList>
     if (widget.enableZoom) {
       setState(() {
         if (details.scale == 1.0) {
-          Offset _tmpOffset = (details.focalPoint -
-                  _startTouchOriginOffset +
-                  _previewPanOffset * _previewZoom) /
-              _zoom;
+          Offset _tmpOffset = (details.focalPoint - _startTouchOriginOffset + _previewPanOffset * _previewZoom) / _zoom;
           _panOffset = Offset(
             _tmpOffset.dx.clamp(
               -_boundarySize.width * (_zoom - 1.0) / (widget.maxScale - 1.0),
@@ -147,8 +137,7 @@ class _ZoomableListState extends State<ZoomableList>
 
   void _onScaleEnd(ScaleEndDetails details) {
     if (!_getContainerSize) {
-      final RenderBox box =
-          _key.currentContext!.findRenderObject() as RenderBox;
+      final RenderBox box = _key.currentContext!.findRenderObject() as RenderBox;
       if (box.size == _containerSize) {
         _getContainerSize = true;
       } else {
@@ -161,8 +150,7 @@ class _ZoomableListState extends State<ZoomableList>
     if (magnitude > 800.0 * _zoom && widget.enableFling) {
       final Offset direction = velocity / magnitude;
       final double distance = (Offset.zero & context.size!).shortestSide;
-      final Offset endOffset =
-          _panOffset + direction * distance * widget.flingFactor * 0.5;
+      final Offset endOffset = _panOffset + direction * distance * widget.flingFactor * 0.5;
       _flingAnimation = Tween(
         begin: _panOffset,
         end: Offset(
@@ -195,12 +183,10 @@ class _ZoomableListState extends State<ZoomableList>
             alignment: Alignment.topCenter,
             maxWidth: widget.maxWidth,
             maxHeight: widget.maxHeight,
-            child: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints box) {
+            child: LayoutBuilder(builder: (BuildContext context, BoxConstraints box) {
               _widgetSize = Size(box.minWidth, box.minHeight);
               return Transform(
-                origin: Offset(_containerSize.width / 2 - _panOffset.dx,
-                    _widgetSize.height / 2 - _panOffset.dy),
+                origin: Offset(_containerSize.width / 2 - _panOffset.dx, _widgetSize.height / 2 - _panOffset.dy),
                 transform: Matrix4.identity()
                   ..translate(_panOffset.dx, _panOffset.dy)
                   ..scale(_zoom, _zoom),
@@ -233,11 +219,9 @@ class _ZoomableListLayout extends MultiChildLayoutDelegate {
 
   @override
   void performLayout(Size size) {
-    layoutChild(gestureContainer,
-        BoxConstraints.tightFor(width: size.width, height: size.height));
+    layoutChild(gestureContainer, BoxConstraints.tightFor(width: size.width, height: size.height));
     positionChild(gestureContainer, Offset.zero);
-    layoutChild(painter,
-        BoxConstraints.tightFor(width: size.width, height: size.height));
+    layoutChild(painter, BoxConstraints.tightFor(width: size.width, height: size.height));
     positionChild(painter, Offset.zero);
   }
 

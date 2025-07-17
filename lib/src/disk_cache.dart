@@ -74,8 +74,7 @@ class DiskCache {
   int get _currentSizeBytes {
     int size = 0;
     if (_metadata != null) {
-      _metadata!.values
-          .forEach((item) => size += int.tryParse(item['size'].toString())!);
+      _metadata!.values.forEach((item) => size += int.tryParse(item['size'].toString())!);
     }
     return size;
   }
@@ -100,13 +99,11 @@ class DiskCache {
 
   Future<void> _commitMetaData([bool force = false]) async {
     if (!force) {
-      if (currentEntries < maxEntries && _currentSizeBytes < maxSizeBytes)
-        return;
+      if (currentEntries < maxEntries && _currentSizeBytes < maxSizeBytes) return;
       _currentOps += 1;
       if (_currentOps < maxCommitOps) return;
     }
-    File path = File(join(
-        (await getApplicationDocumentsDirectory()).path, _metadataFilename));
+    File path = File(join((await getApplicationDocumentsDirectory()).path, _metadataFilename));
     await path.writeAsString(json.encode(_metadata));
     _currentOps = 0;
   }
@@ -116,8 +113,7 @@ class DiskCache {
     if (_metadata == null) await _initMetaData();
     _metadata!.removeWhere((k, v) {
       if (!File(v['path']).existsSync()) return true;
-      if (DateTime.fromMillisecondsSinceEpoch(v['createdTime'] + v['maxAge'])
-          .isBefore(DateTime.now())) {
+      if (DateTime.fromMillisecondsSinceEpoch(v['createdTime'] + v['maxAge']).isBefore(DateTime.now())) {
         File(v['path']).deleteSync();
         return true;
       }
@@ -145,10 +141,7 @@ class DiskCache {
           return null;
         }
         if (DateTime.fromMillisecondsSinceEpoch(
-              _metadata![uid]['createdTime'] +
-                  (rule != null
-                      ? rule.maxAge.inMilliseconds
-                      : _metadata![uid]['maxAge']),
+              _metadata![uid]['createdTime'] + (rule != null ? rule.maxAge.inMilliseconds : _metadata![uid]['maxAge']),
             ).isBefore(DateTime.now()) &&
             !force) {
           await File(_metadata![uid]['path']).delete();
@@ -157,8 +150,7 @@ class DiskCache {
           return null;
         }
         Uint8List data = await File(_metadata![uid]['path']).readAsBytes();
-        if (_metadata![uid]['crc32'] != null &&
-            _metadata![uid]['crc32'] != crc32(data)) {
+        if (_metadata![uid]['crc32'] != null && _metadata![uid]['crc32'] != crc32(data)) {
           await File(_metadata![uid]['path']).delete();
           _metadata!.remove(uid);
           await _commitMetaData();
@@ -182,9 +174,7 @@ class DiskCache {
   Future<bool> save(String uid, Uint8List data, CacheRule rule) async {
     if (_metadata == null) await _initMetaData();
     Directory dir = Directory(join(
-        (rule.storeDirectory == StoreDirectoryType.temporary
-                ? await getTemporaryDirectory()
-                : await getApplicationDocumentsDirectory())
+        (rule.storeDirectory == StoreDirectoryType.temporary ? await getTemporaryDirectory() : await getApplicationDocumentsDirectory())
             .path,
         'imagecache'));
 
@@ -213,8 +203,7 @@ class DiskCache {
   Future<void> _checkCacheSize() async {
     while (currentEntries > maxEntries || _currentSizeBytes > maxSizeBytes) {
       String key = _metadata!.keys.first;
-      if (File(_metadata![key]['path']).existsSync())
-        await File(_metadata![key]['path']).delete();
+      if (File(_metadata![key]['path']).existsSync()) await File(_metadata![key]['path']).delete();
       _metadata!.remove(key);
     }
   }
@@ -247,12 +236,9 @@ class DiskCache {
   /// Evicts all entries from [DiskCache].
   Future<bool> clear() async {
     try {
-      Directory tempDir =
-          Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
-      Directory appDir = Directory(
-          join((await getApplicationDocumentsDirectory()).path, 'imagecache'));
-      File metadataFile = File(join(
-          (await getApplicationDocumentsDirectory()).path, _metadataFilename));
+      Directory tempDir = Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
+      Directory appDir = Directory(join((await getApplicationDocumentsDirectory()).path, 'imagecache'));
+      File metadataFile = File(join((await getApplicationDocumentsDirectory()).path, _metadataFilename));
       if (tempDir.existsSync()) await tempDir.delete(recursive: true);
       if (appDir.existsSync()) await appDir.delete(recursive: true);
       if (metadataFile.existsSync()) await metadataFile.delete();
@@ -268,14 +254,10 @@ class DiskCache {
   Future<int?> cacheSize() async {
     int size = 0;
     try {
-      Directory tempDir =
-          Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
-      Directory appDir = Directory(
-          join((await getApplicationDocumentsDirectory()).path, 'imagecache'));
-      if (tempDir.existsSync())
-        tempDir.listSync().forEach((var file) => size += file.statSync().size);
-      if (appDir.existsSync())
-        appDir.listSync().forEach((var file) => size += file.statSync().size);
+      Directory tempDir = Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
+      Directory appDir = Directory(join((await getApplicationDocumentsDirectory()).path, 'imagecache'));
+      if (tempDir.existsSync()) tempDir.listSync().forEach((var file) => size += file.statSync().size);
+      if (appDir.existsSync()) appDir.listSync().forEach((var file) => size += file.statSync().size);
       return size;
     } catch (e) {
       if (printError) print(e);
@@ -288,8 +270,8 @@ class DiskCache {
 class CacheRule {
   const CacheRule({
     this.maxAge = const Duration(days: 30),
-    this.storeDirectory: StoreDirectoryType.temporary,
-    this.checksum: false,
+    this.storeDirectory = StoreDirectoryType.temporary,
+    this.checksum = false,
   });
 
   /// Set a maximum age for the cache file.
@@ -312,8 +294,7 @@ Future<bool> removeFromCache(String url, {bool useCacheRule = false}) async {
     if (useCacheRule) {
       return await DiskCache().evict(uId);
     } else {
-      await File(join((await getTemporaryDirectory()).path, 'imagecache', uId))
-          .delete();
+      await File(join((await getTemporaryDirectory()).path, 'imagecache', uId)).delete();
       return true;
     }
   } catch (e) {

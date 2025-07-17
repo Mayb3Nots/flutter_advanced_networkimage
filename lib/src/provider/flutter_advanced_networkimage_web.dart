@@ -148,15 +148,14 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final AdvancedNetworkImage typedOther = other;
+    final AdvancedNetworkImage typedOther = other as AdvancedNetworkImage;
     return id == null ? url == typedOther.url && scale == typedOther.scale : id == typedOther.id;
   }
 
   @override
-  int get hashCode => ui.hashValues(
-      url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
+  int get hashCode => Object.hash(url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
 
   @override
   String toString() => '$runtimeType('

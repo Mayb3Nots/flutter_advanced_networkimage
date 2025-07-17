@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui show hashValues;
+// ui import removed as hashValues is deprecated
 
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -93,8 +93,7 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
   }
 
   @override
-  PictureStreamCompleter load(AdvancedNetworkSvg key,
-      {PictureErrorListener? onError}) {
+  PictureStreamCompleter load(AdvancedNetworkSvg key, {PictureErrorListener? onError}) {
     return OneFramePictureStreamCompleter(
       _loadAsync(key, onError: onError),
       informationCollector: () sync* {
@@ -108,16 +107,14 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
     return disk ? await removeFromCache(url) : false;
   }
 
-  Future<PictureInfo> _loadAsync(AdvancedNetworkSvg key,
-      {PictureErrorListener? onError}) async {
+  Future<PictureInfo> _loadAsync(AdvancedNetworkSvg key, {PictureErrorListener? onError}) async {
     assert(key == this);
 
     if (useDiskCache) {
       try {
         Uint8List? _diskCache = await loadFromDiskCache();
         if (key.loadedCallback != null) key.loadedCallback!();
-        return await decode(_diskCache, key.colorFilter, key.toString(),
-            onError: onError);
+        return await decode(_diskCache, key.colorFilter, key.toString(), onError: onError);
       } catch (e) {
         if (key.printError) print(e);
       }
@@ -136,27 +133,20 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
     );
     if (imageData != null) {
       if (key.loadedCallback != null) key.loadedCallback!();
-      return await decode(imageData, key.colorFilter, key.toString(),
-          onError: onError);
+      return await decode(imageData, key.colorFilter, key.toString(), onError: onError);
     }
 
     if (key.loadFailedCallback != null) key.loadFailedCallback!();
     if (key.fallbackAssetImage != null) {
       ByteData imageData = await rootBundle.load(key.fallbackAssetImage!);
-      return await decode(
-          imageData.buffer.asUint8List(), key.colorFilter, key.toString(),
-          onError: onError);
+      return await decode(imageData.buffer.asUint8List(), key.colorFilter, key.toString(), onError: onError);
     }
-    if (key.fallbackImage != null)
-      return await decode(key.fallbackImage, key.colorFilter, key.toString(),
-          onError: onError);
+    if (key.fallbackImage != null) return await decode(key.fallbackImage, key.colorFilter, key.toString(), onError: onError);
 
     return Future.error(StateError('Failed to load $url.'));
   }
 
-  Future<PictureInfo> decode(
-      Uint8List? imageData, ColorFilter? colorFilter, String keyString,
-      {PictureErrorListener? onError}) {
+  Future<PictureInfo> decode(Uint8List? imageData, ColorFilter? colorFilter, String keyString, {PictureErrorListener? onError}) {
     if (onError != null)
       // ignore: invalid_return_type_for_catch_error
       return decoder(imageData, colorFilter, keyString)..catchError(onError);
@@ -175,8 +165,7 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
     String uId = uid(key.url);
 
     if (key.cacheRule == null) {
-      Directory _cacheImagesDirectory =
-          Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
+      Directory _cacheImagesDirectory = Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
       if (_cacheImagesDirectory.existsSync()) {
         File _cacheImageFile = File(join(_cacheImagesDirectory.path, uId));
         if (_cacheImageFile.existsSync()) {
@@ -199,8 +188,7 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
         printError: key.printError,
       );
       if (imageData != null) {
-        await (File(join(_cacheImagesDirectory.path, uId)))
-            .writeAsBytes(imageData);
+        await (File(join(_cacheImagesDirectory.path, uId))).writeAsBytes(imageData);
         return imageData;
       }
     } else {
@@ -229,9 +217,9 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final AdvancedNetworkSvg typedOther = other;
+    final AdvancedNetworkSvg typedOther = other as AdvancedNetworkSvg;
     return url == typedOther.url &&
         scale == typedOther.scale &&
         useDiskCache == typedOther.useDiskCache &&
@@ -241,8 +229,7 @@ class AdvancedNetworkSvg extends PictureProvider<AdvancedNetworkSvg, Uint8List?>
   }
 
   @override
-  int get hashCode => ui.hashValues(url, scale, useDiskCache, retryLimit,
-      retryDuration, retryDurationFactor, timeoutDuration);
+  int get hashCode => Object.hash(url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
 
   @override
   String toString() => '$runtimeType('

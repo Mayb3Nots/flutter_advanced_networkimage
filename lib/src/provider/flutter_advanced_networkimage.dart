@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui show Codec, hashValues;
+import 'dart:ui' as ui show Codec;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -159,8 +159,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
       try {
         Uint8List? _diskCache = await loadFromDiskCache();
         if (_diskCache != null) {
-          if (key.postProcessing != null)
-            _diskCache = (await key.postProcessing!(_diskCache)) ?? _diskCache;
+          if (key.postProcessing != null) _diskCache = (await key.postProcessing!(_diskCache)) ?? _diskCache;
           if (key.loadedCallback != null) key.loadedCallback!();
           return decode(
             await ImmutableBuffer.fromUint8List(_diskCache),
@@ -183,8 +182,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
         printError: key.printError,
       );
       if (imageData != null) {
-        if (key.postProcessing != null)
-          imageData = (await key.postProcessing!(imageData)) ?? imageData;
+        if (key.postProcessing != null) imageData = (await key.postProcessing!(imageData)) ?? imageData;
         if (key.loadedCallback != null) key.loadedCallback!();
         return decode(
           await ImmutableBuffer.fromUint8List(imageData),
@@ -224,8 +222,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
     String uId = uid(key.url);
 
     if (key.cacheRule == null) {
-      Directory _cacheImagesDirectory =
-          Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
+      Directory _cacheImagesDirectory = Directory(join((await getTemporaryDirectory()).path, 'imagecache'));
       if (_cacheImagesDirectory.existsSync()) {
         File _cacheImageFile = File(join(_cacheImagesDirectory.path, uId));
         if (_cacheImageFile.existsSync()) {
@@ -249,8 +246,7 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
         printError: key.printError,
       );
       if (imageData != null) {
-        if (key.preProcessing != null)
-          imageData = (await key.preProcessing!(imageData)) ?? imageData;
+        if (key.preProcessing != null) imageData = (await key.preProcessing!(imageData)) ?? imageData;
         await (File(join(_cacheImagesDirectory.path, uId))).writeAsBytes(imageData);
         return imageData;
       }
@@ -284,15 +280,14 @@ class AdvancedNetworkImage extends ImageProvider<AdvancedNetworkImage> {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final AdvancedNetworkImage typedOther = other;
+    final AdvancedNetworkImage typedOther = other as AdvancedNetworkImage;
     return id == null ? url == typedOther.url && scale == typedOther.scale : id == typedOther.id;
   }
 
   @override
-  int get hashCode => ui.hashValues(
-      url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
+  int get hashCode => Object.hash(url, scale, useDiskCache, retryLimit, retryDuration, retryDurationFactor, timeoutDuration);
 
   @override
   String toString() => '$runtimeType('
